@@ -4,6 +4,9 @@ from tensorflow import keras
 import numpy as np
 import pandas
 import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
 
 
 DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
@@ -12,6 +15,24 @@ DATASET_ENCODING = "ISO-8859-1"
 sentiment_tweet_dataframe = pandas.read_csv('sentiment-tweet-data.csv', encoding=DATASET_ENCODING, names=DATASET_COLUMNS)
 sentiment_tweet_dataframe = sentiment_tweet_dataframe.reindex(np.random.permutation(sentiment_tweet_dataframe.index))
 
+
+def preprocess_text(text):
+    ''' Preprocesses text by removing special characters, removing urls, lowercasing text, 
+        removing stop words, and stemming the rest
+            Args:
+                text: string of the a tweets text
+            Returns:
+                A string of the text with the special characters and urls removed, loswercased text, 
+                stopwords removed, and stemming of words
+    '''
+    stop_words = stopwords.words('english')
+    stemmer = SnowballStemmer('english')
+    text = re.sub('@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+', ' ', text.lower()).strip()
+    new_text = []
+    for token in text.split():
+        if token not in stop_words:
+            new_text.append(stemmer.stem(token))
+    return ' '.join(new_text)
 
 def preprocess_features(sentiment_tweet_dataframe):
     ''' Prepares features from sentiment_tweet_data for model use.
@@ -23,8 +44,7 @@ def preprocess_features(sentiment_tweet_dataframe):
     selected_features = sentiment_tweet_dataframe['text']
     processed_features = selected_features.copy()
     # Remove links and secial characters from the lowercased text
-    processed_features = processed_features.apply(lambda x: \
-        re.sub('@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+', ' ', x.lower()).strip())
+    processed_features = processed_features.apply(lambda x: preprocess_text(x))
     return processed_features
 
 def preprocess_targets(sentiment_tweet_dataframe):
