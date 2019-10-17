@@ -9,18 +9,12 @@ import pandas as pd
 
 training_dataframe = pd.read_csv('./data/training_data.csv',  encoding="ISO-8859-1", names=['target', 'text'])
 training_dataframe = training_dataframe.dropna()
-targets = training_dataframe.pop('target')
-training_dataset = tf.data.Dataset.from_tensor_slices((training_dataframe.values, targets.values))
 
 validation_dataframe = pd.read_csv('./data/training_data.csv', encoding="ISO-8859-1", names=['target', 'text'])
 validation_dataframe = validation_dataframe.dropna()
-targets = validation_dataframe.pop('target')
-validation_dataset = tf.data.Dataset.from_tensor_slices((validation_dataframe.values, targets.values))
 
 test_dataframe = pd.read_csv('./data/training_data.csv', encoding="ISO-8859-1", names=['target', 'text'])
 test_dataframe = test_dataframe.dropna()
-targets = test_dataframe.pop('target')
-test_dataset = tf.data.Dataset.from_tensor_slices((test_dataframe.values, targets.values))
 
 # vectorizor = CountVectorizer().fit(training_dataframe)
 # training_vectorized = training_dataframe.apply(vectorizor.transform)
@@ -39,7 +33,7 @@ model.summary()
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
  
-history = model.fit(training_dataset, epochs=20, validation_data=validation_dataset, verbose=1)
-results = model.evaluate(test_dataset, verbose=2)
+history = model.fit(training_dataframe['text'].values, training_dataframe['target'].values, epochs=20, validation_data=validation_dataframe.values, verbose=1)
+results = model.evaluate(test_dataframe['text'].values, test_dataframe['target'].values, verbose=2)
 for name, value in zip(model.metrics_names, results):
   print("%s: %.3f" % (name, value))
