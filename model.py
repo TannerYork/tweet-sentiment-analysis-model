@@ -1,80 +1,45 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import tensorflow as tf
 from tensorflow import keras
-import numpy as np
-import pandas
-import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.stem import SnowballStemmer
+import tensorflow_hub as hub
+import tensorflow_datasets as tfds
+import pandas as pd
+# from sklearn.naive_bayes import GaussianNB
+# from sklearn.feature_extraction.text import CountVectorizer
 
+training_dataframe = pd.read_csv('./data/training_data.csv',  encoding="ISO-8859-1", names=['target', 'text'])
+training_dataframe = training_dataframe.dropna()
+targets = training_dataframe.pop('target')
+training_dataset = tf.data.Dataset.from_tensor_slices((training_dataframe.values, targets.values))
 
-DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
-DATASET_ENCODING = "ISO-8859-1"
+validation_dataframe = pd.read_csv('./data/training_data.csv', encoding="ISO-8859-1", names=['target', 'text'])
+validation_dataframe = validation_dataframe.dropna()
+targets = validation_dataframe.pop('target')
+validation_dataset = tf.data.Dataset.from_tensor_slices((validation_dataframe.values, targets.values))
 
-sentiment_tweet_dataframe = pandas.read_csv('sentiment-tweet-data.csv', encoding=DATASET_ENCODING, names=DATASET_COLUMNS)
-sentiment_tweet_dataframe = sentiment_tweet_dataframe.reindex(np.random.permutation(sentiment_tweet_dataframe.index))
+test_dataframe = pd.read_csv('./data/training_data.csv', encoding="ISO-8859-1", names=['target', 'text'])
+test_dataframe = test_dataframe.dropna()
+targets = test_dataframe.pop('target')
+test_dataset = tf.data.Dataset.from_tensor_slices((test_dataframe.values, targets.values))
 
+# vectorizor = CountVectorizer().fit(training_dataframe)
+# training_vectorized = training_dataframe.apply(vectorizor.transform)
+# gnb = GaussianNB()
+# print(training_vectorized[:5])
+# model = gnb.fit(training_vectorized.values, targets.values)
 
-def preprocess_text(text):
-    ''' Preprocesses text by removing special characters, removing urls, lowercasing text, 
-        removing stop words, and stemming the rest
-            Args:
-                text: string of the a tweets text
-            Returns:
-                A string of the text with the special characters and urls removed, loswercased text, 
-                stopwords removed, and stemming of words
-    '''
-    stop_words = stopwords.words('english')
-    stemmer = SnowballStemmer('english')
-    text = re.sub('@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+', ' ', text.lower()).strip()
-    new_text = []
-    for token in text.split():
-        if token not in stop_words:
-            new_text.append(stemmer.stem(token))
-    return ' '.join(new_text)
+embedding = "https://tfhub.dev/google/tf2-preview/gnews-swivel-20dim/1"
+hub_layer = hub.KerasLayer(embedding, input_shape=[], dtype=tf.string, trainable=True)
 
-def preprocess_features(sentiment_tweet_dataframe):
-    ''' Prepares features from sentiment_tweet_data for model use.
-            Args: 
-                sentiment_tweet_data: A pandas dataframe of sentiment140 twitter data from kaggle
-            Returns:
-                A dataframe with features to be used for the model.
-    '''
-    selected_features = sentiment_tweet_dataframe['text']
-    processed_features = selected_features.copy()
-    # Remove links and secial characters from the lowercased text
-    processed_features = processed_features.apply(lambda x: preprocess_text(x))
-    return processed_features
+model = tf.keras.Sequential()
+model.add(hub_layer)
+model.add(tf.keras.layers.Dense(16, activation='relu'))
+model.add(tf.keras.layers.Dense(1, activation='softmax'))
+model.summary()
 
-def preprocess_targets(sentiment_tweet_dataframe):
-    ''' Prepares targets feartures (labels) from sentiment_tweet_dataframe
-            Args:
-                sentiment_tweet_dataframe: a pandas dataframe of sentiment140 twitter data from kaggel
-            Returns:
-                A dataframe that contains the target feature
-    ''' 
-    output_targets = pandas.DataFrame()
-    output_targets['positive'] = (sentiment_tweet_dataframe['target'] == 4)
-    output_targets['negative'] = (sentiment_tweet_dataframe['target'] == 0)
-    return output_targets
-
-# Split data into training and validation 
-TRAINING_AMOUNT = int(len(sentiment_tweet_dataframe)*0.80)
-VALIDATION_AMOUNT = int(len(sentiment_tweet_dataframe)*0.20)
-
-training_examples = preprocess_features(sentiment_tweet_dataframe.head(TRAINING_AMOUNT))
-training_targets = preprocess_targets(sentiment_tweet_dataframe.head(TRAINING_AMOUNT))
-
-validation_examples = preprocess_features(sentiment_tweet_dataframe.tail(VALIDATION_AMOUNT))
-validation_targets = preprocess_targets(sentiment_tweet_dataframe.tail(VALIDATION_AMOUNT))
-
-print("Training examples summary:")
-print(training_examples.describe())
-print("Validation examples summary:")
-print(validation_examples.describe())
-
-print("Training targets summary:")
-print(training_targets.describe())
-print("Validation targets summary:")
-print(validation_targets.describe())
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+ 
+history = model.fit(training_dataset, epochs=20, validation_data=validation_dataset, verbose=1)
+results = model.evaluate(test_dataset, verbose=2)
+for name, value in zip(model.metrics_names, results):
+  print("%s: %.3f" % (name, value))
