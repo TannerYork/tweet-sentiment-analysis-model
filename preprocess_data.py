@@ -3,15 +3,14 @@ import pandas
 import re
 import nltk
 from nltk.corpus import stopwords
-from nltk.stem import SnowballStemmer
 from nltk.tokenize import word_tokenize 
+import preprocessor as p
 
 
 DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
 DATASET_ENCODING = "ISO-8859-1"
 
 stop_words = set(stopwords.words('english'))
-stemmer = SnowballStemmer('english')
 
 sentiment_tweet_dataframe = pandas.read_csv('sentiment-tweet-data.csv', encoding=DATASET_ENCODING, names=DATASET_COLUMNS)
 sentiment_tweet_dataframe = sentiment_tweet_dataframe.reindex(np.random.permutation(sentiment_tweet_dataframe.index))
@@ -25,8 +24,9 @@ def preprocess_text(text):
                 A string of the text with the special characters and urls removed, loswercased text, 
                 stopwords removed, and stemming of words
     '''
+    text = p.clean(text)
     text = re.sub(r'@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+', ' ', text.lower()).strip()
-    new_text = [stemmer.stem(token) for token in word_tokenize(text) if token not in stop_words and len(token) > 1]
+    new_text = [token for token in word_tokenize(text) if token not in stop_words and len(token) > 1]
     return ' '.join(new_text)
 
 def preprocess_value(value):
