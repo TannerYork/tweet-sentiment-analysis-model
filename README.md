@@ -28,6 +28,31 @@ The second way is training in python
 3. Modify model and run the model file
 ```python3 model.py```
 
+## Get the Model
+If you want to just use the model with python, follow these steps
+
+1. Download tweet_sa_model.h5
+2. Open new or existing project in code editor
+3. Downlod tenforslow and tensorflow_hub
+```
+pip3 install tensorflow
+pip3 install tensorflow_hub
+```
+4. Import tensorflow keras and tensorflow_hub
+```
+from tensorflow import keras
+import tensorflow_hub as hub
+```
+5. Load model with hub KerasLayer<br>
+```
+model = keras.models.load_model('./twitter_sa_model.h5', custom_objects={'KerasLayer': hub.KerasLayer})
+```
+6. Make perdictions from preprocessed data<br>
+```
+model.predict(['hating summer classes loving new apt complete bamfin deck'])
+```
+
+
 
 ## Built With
 
