@@ -16,7 +16,8 @@ What things you need to install the software and how to install them
 
 There are two ways you can train/modify the model.
 
-The first way is in a jupyter notebook (recomended)
+The first way is in a jupyter notebook <br>
+(currently having trouble connecting notebooks to virtualenv. If you want to use this method, you'll need to download the requirments outside of a virtualenv or set the connection yourself.)
 1. open jupyter notebook
 2. Run the code blocks in order
 3. Modefy model and train in the training code block
