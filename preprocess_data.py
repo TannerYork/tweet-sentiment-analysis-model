@@ -7,7 +7,7 @@ from nltk.tokenize import word_tokenize
 import preprocessor as p
 
 
-DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
+DATASET_COLUMNS = ["Sentiment", "ID", "Date", 'Query', 'Sender', 'SentimentText']
 DATASET_ENCODING = "ISO-8859-1"
 
 stop_words = set(stopwords.words('english'))
@@ -26,18 +26,18 @@ def preprocess_text(text):
     '''
     text = p.clean(text)
     text = re.sub(r'@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+', ' ', text.lower()).strip()
-    new_text = [token for token in word_tokenize(text) if token not in stop_words and len(token) > 1]
+    new_text = [token for token in word_tokenize(text)]
     return ' '.join(new_text)
 
 def preprocess_value(value):
-    ''' Preprocesses values by making sure they are either 0 or 1 
+    ''' Preprocesses values by making sure they are either 0 or 1  and an interger
             Args:
                 value: integer that is either 0 or 4
             Returns:
                 The given value or 1 if the value is 4
     '''
     if value == 4: return 1
-    else: return value
+    else: return int(value)
 
 def preprocess_data(sentiment_tweet_dataframe):
     ''' Prepares features from sentiment_tweet_data for model use.
@@ -46,12 +46,12 @@ def preprocess_data(sentiment_tweet_dataframe):
             Returns:
                 A dataframe with features to be used for the model.
     '''
-    selected_features = sentiment_tweet_dataframe[['target', 'text']]
+    selected_features = sentiment_tweet_dataframe[['Sentiment', 'SentimentText']]
     processed_data = selected_features.copy()
     # Remove links and secial characters from the lowercased text
-    processed_data['text'] = processed_data['text'].apply(lambda x: preprocess_text(x))
+    processed_data['SentimentText'] = processed_data['SentimentText'].apply(lambda x: preprocess_text(x))
     processed_data = processed_data.dropna()
-    processed_data['target'] = processed_data['target'].apply(lambda x: preprocess_value(x))
+    processed_data['Sentiment'] = processed_data['Sentiment'].apply(lambda x: preprocess_value(x))
     return processed_data
 
 # Split data into training, validation, and test data
