@@ -14,19 +14,18 @@ What things you need to install the software and how to install them
 
 ### Installing
 
-There are two ways you can train/modify the model.
+There are two ways you can train/modify the model. The data is already preprocessed for you, so no need to download the dataset unless you want to. The sentiment data can be found [here](https://www.kaggle.com/kazanova/sentiment140) if your interested.
 
 The first way is in a jupyter notebook <br>
 (currently having trouble connecting notebooks to virtualenv. If you want to use this method, you'll need to download the requirments outside of a virtualenv or set the connection yourself.)
+
 1. open jupyter notebook
 2. Run the code blocks in order
 3. Modefy model and train in the training code block
 
 The second way is training in python
-1. Install the twitter sentemient dataset found [here](https://www.kaggle.com/kazanova/sentiment140)
-2. Run the preprocess_data file
-```python3 preprocess_data.py```
-3. Modify model and run the model file
+
+1. Modify model and run the model file
 ```python3 model.py```
 
 ## Get the Model
